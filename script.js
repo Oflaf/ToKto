@@ -1,4 +1,4 @@
-// script.js
+// script.js (POPRAWIONA WERSJA)
 document.addEventListener('DOMContentLoaded', () => {
     const openModalBtn = document.getElementById('open-search-modal');
     const searchModal = document.getElementById('search-modal');
@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const banNotification = document.getElementById('ban-notification');
     const reportConfirmationPopup = document.getElementById('report-confirmation-popup');
     
-    // === ZMIENNE DLA POWIADOMIEŃ ===
     const favicon = document.getElementById('favicon');
     const originalTitle = document.title;
     const defaultFavicon = 'public/img/fav.png';
@@ -65,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { time: 1440, users: 727 }
     ];
 
-    // === FUNKCJA DO OBSŁUGI POWIADOMIEŃ ===
     const handleNewMessageNotification = () => {
         if (document.hidden) {
             favicon.href = notificationFavicon;
@@ -76,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // === EVENT LISTENER DO RESETOWANIA FAVICONY I TYTUŁU ===
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             favicon.href = defaultFavicon;
@@ -84,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // === OBSŁUGA PRZYCISKU WYCISZANIA ===
     const updateSoundIcon = () => {
         if (isMuted) {
             soundIcon.className = 'fas fa-volume-mute';
@@ -101,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSoundIcon();
     });
 
-    updateSoundIcon(); // Ustawienie początkowej ikony przy załadowaniu strony
+    updateSoundIcon();
 
     function getFakeUserCount() {
         const now = new Date();
@@ -380,7 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     function initializeWebSocket() {
-        const WSS_URL = `ws://${window.location.hostname}:${3000}`;
+        // === FIX #2: Dynamiczny i bezpieczny adres WebSocket ===
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const WSS_URL = `${protocol}//${window.location.host}`;
+
         socket = new WebSocket(WSS_URL);
         
         socket.onopen = () => {

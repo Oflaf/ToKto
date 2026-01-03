@@ -1,4 +1,4 @@
-// server.js
+// server.js (POPRAWIONA WERSJA)
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -17,7 +17,8 @@ if (!API_KEY) {
 }
 
 const app = express();
-const PORT = 3000;
+// === FIX #1: Użyj portu z Render lub 3000 jako domyślnego ===
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
@@ -28,9 +29,8 @@ const REPORTS_TO_BAN = 5;
 
 let bannedIPs = new Map();
 let reportCounts = new Map();
-let randomQuestions = []; // Zmienna do przechowywania pytań
+let randomQuestions = [];
 
-// Funkcja do wczytywania losowych pytań z pliku
 async function loadQuestions() {
     try {
         const data = await fs.readFile(path.join(__dirname, 'los.txt'), 'utf8');
@@ -45,6 +45,9 @@ async function loadQuestions() {
     }
 }
 
+// UWAGA: System plików na Render jest efemeryczny. Oznacza to, że plik bans.json
+// zostanie usunięty przy każdym restarcie serwera (np. przy nowym wdrożeniu).
+// To rozwiązanie jest OK do testów, ale docelowo bany powinny być w bazie danych.
 async function loadBans() {
     try {
         await fs.access(BANS_FILE_PATH);
@@ -104,7 +107,6 @@ const RESTART_MESSAGES = [[], ["xd"], ["XD"], ["lol"], ["."], [], [], [], ["xddd
 const GOODBYE_MESSAGES = [["?"], ["xd"], ["XD"], ["."], ["aha"], ["wtf"], [], [], [], [], [], []];
 const conversations = new Map();
 
-// NOWY ENDPOINT DO LOSOWANIA PYTANIA
 app.get('/random-question', (req, res) => {
     if (randomQuestions.length === 0) {
         return res.status(500).json({ error: "Brak dostępnych pytań na serwerze." });
@@ -112,7 +114,6 @@ app.get('/random-question', (req, res) => {
     const question = randomQuestions[Math.floor(Math.random() * randomQuestions.length)];
     res.json({ question });
 });
-
 
 function isRepetitive(newMessage, history) {
     const normalize = (txt) => txt.toLowerCase().trim().replace(/[.,?!]/g, '');
@@ -220,7 +221,7 @@ app.post('/start-bot', (req, res) => {
     if (botProfile.type === 'slang_zoomer') {
         const greetings = ['siema', 'elo', 'hej', 'Siema', 'siemka', 'km?', 'KM?', "K czy m?", "k czy m", "km"];
         firstMessage = greetings[Math.floor(Math.random() * greetings.length)];
-    } 
+    }
     if (botProfile.type === 'lowercase_lazy') firstMessage = Math.random() > 0.5 ? "hej" : "siema";
     if (botProfile.type === 'dry_short') firstMessage = "Hej.";
     if (Math.random() > 0.9) firstMessage += ` ${botProfile.persona.gender === 'k' ? 'k' : 'm'}`;
@@ -272,12 +273,12 @@ app.post('/chat', (req, res) => {
     if (contradictionKeyword) {
         conversation.isBotLocked = true;
         res.json({ action: "contradictionDisconnect" });
-        setTimeout(() => conversations.delete(sessionId), 5000); 
+        setTimeout(() => conversations.delete(sessionId), 5000);
         return;
     }
     const foundKeyword = OFFENSIVE_KEYWORDS.find(k => message.toLowerCase().includes(k));
     if (foundKeyword) {
-        conversation.isBotLocked = true; 
+        conversation.isBotLocked = true;
         const randomReply = RESTART_MESSAGES[Math.floor(Math.random() * RESTART_MESSAGES.length)];
         res.json({ replies: randomReply, action: "disconnect" });
         setTimeout(() => conversations.delete(sessionId), 5000);
@@ -427,7 +428,7 @@ function broadcastUserCount() {
 server.listen(PORT, async () => {
     console.log(`Serwer HTTP i WebSocket nasłuchuje na porcie ${PORT}`);
     await loadBans();
-    await loadQuestions(); // Wczytaj pytania przy starcie serwera
+    await loadQuestions();
     setInterval(cleanupExpiredBans, 60 * 1000);
     setInterval(cleanupInactiveSessions, 5 * 60 * 1000);
     setInterval(broadcastUserCount, 15000);
