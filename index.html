@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Czat Anonimowy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="public/popup/popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link id="favicon" rel="icon" type="image/png" href="public/img/fav.png">
+</head>
+<body>
+    <div id="popup1" class="popup-overlay hidden">
+        <div class="popup-content">
+            <p>
+                Witaj! Korzystając z serwisu KtoTo.pl, akceptujesz i oświadczasz, że zapoznałeś się z Regulaminem oraz Polityką Prywatności. Potwierdzasz, że masz ukończone 18 lat lub, jeśli masz co najmniej 15 lat, korzystasz z serwisu za zgodą rodziców lub opiekunów prawnych.
+            </p>
+            <div class="popup-buttons">
+                <button id="confirm-btn-1" class="popup-confirm-btn">Potwierdzam</button>
+                <button id="decline-btn-1" class="popup-decline-btn">Rezygnuję</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="popup2" class="popup-overlay hidden">
+        <div class="popup-content">
+            <p>
+                Wyrażam zgodę i mam świadomość, że w przypadku trudności technicznych w nawiązaniu połączenia z innymi użytkownikami treść moich wiadomości może być przetwarzana w celu przeprowadzenia zautomatyzowanej wymiany wiadomości i zapewnienia ciągłości działania serwisu.
+            </p>
+            <div class="popup-buttons">
+                <button id="confirm-btn-2" class="popup-confirm-btn">Potwierdzam</button>
+                <button id="decline-btn-2" class="popup-decline-btn">Rezygnuję</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-header">
+        <div class="logo-container">
+            <img src="public/img/fav.png" alt="Logo Icon" class="header-logo-icon">
+            <img src="public/img/logo.png" alt="Logo Czat Anonimowy" class="header-logo">
+        </div>
+        
+        <div class="user-count" title="Użytkownicy online">
+            <i class="fas fa-users"></i>
+            <span id="user-count-number">...</span>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="ad-space left-ad"></div>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2 id="status-header"><span id="status-dot" class="disconnected"></span>Rozłączono</h2>
+                <div class="header-icons">
+                    <div class="theme-icon" id="theme-picker-icon" title="Zmień motyw">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <div class="dice-icon" id="random-question-btn" title="Zadaj losowe pytanie">
+                        <img src="public/img/dice.png" alt="Losowe pytanie">
+                    </div>
+                    <!-- NOWA IKONA DŹWIĘKU -->
+                    <div class="sound-icon" id="toggle-sound-btn" title="Wycisz powiadomienia">
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+                    <div class="search-icon" id="open-search-modal" title="Opcje wyszukiwania">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="report-icon" id="report-user-btn" title="Musisz odczekać 10 sekund">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="theme-palette-container" id="theme-palette"></div>
+                </div>
+            </div>
+            <div class="chat-box" id="chat-box">
+                <div class="message system-message">Kliknij przycisk w lewym dolnym rogu, aby znaleźć rozmówcę.</div>
+            </div>
+            <div class="chat-input">
+                <button id="control-btn" class="connect-mode" title="Połącz"><i class="fas fa-play"></i></button>
+                <div class="textarea-wrapper">
+                    <textarea id="user-input" placeholder="Wpisz wiadomość..." rows="1" disabled></textarea>
+                    <img src="public/img/emoji.png" id="emoji-btn" alt="Emoji" title="Wybierz emoji">
+                    <div id="emoji-picker"></div>
+                </div>
+                <button id="send-btn" disabled><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <div class="ad-space right-ad"></div>
+    </div>
+
+    <div class="search-modal-overlay" id="search-modal">
+        <div class="search-modal-content">
+            <button class="modal-close-btn" id="close-search-modal" title="Zamknij">&times;</button>
+            <div class="modal-section">
+                <h3>Szukam:</h3>
+                <div class="options-group">
+                    <input type="radio" id="search-woman" name="search-gender" value="woman" checked>
+                    <label for="search-woman">Kobiety</label>
+                    <input type="radio" id="search-man" name="search-gender" value="man">
+                    <label for="search-man">Mężczyzny</label>
+                    <input type="radio" id="search-any" name="search-gender" value="any">
+                    <label for="search-any">Bez znaczenia</label>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h3>Do:</h3>
+                <div class="options-group">
+                    <input type="radio" id="purpose-chat" name="purpose" value="chat" checked>
+                    <label for="purpose-chat">Do rozmowy</label>
+                    <input type="radio" id="purpose-relation" name="purpose" value="relation">
+                    <label for="purpose-relation">Do relacji</label>
+                    <input type="radio" id="purpose-moment" name="purpose" value="moment">
+                    <label for="purpose-moment">"Na chwilę"</label>
+                </div>
+            </div>
+            <div class="modal-section">
+                <h3>Jestem:</h3>
+                <div class="options-group">
+                    <input type="radio" id="i-am-man" name="my-gender" value="man" checked>
+                    <label for="i-am-man">Mężczyzną</label>
+                    <input type="radio" id="i-am-woman" name="my-gender" value="woman">
+                    <label for="i-am-woman">Kobietą</label>
+                </div>
+            </div>
+            <button class="modal-start-btn">Szukaj</button>
+        </div>
+    </div>
+    <div class="theme-palette-container" id="theme-palette"></div>
+    <div class="ban-notification" id="ban-notification">
+        <span></span> 
+    </div>
+    <div class="confirmation-popup" id="report-confirmation-popup"></div>
+    <div class="captcha-overlay" id="captcha-overlay">
+        <div class="captcha-content">
+            <h3>Weryfikacja CAPTCHA</h3>
+            <p>Pokaż, że nie jesteś człowiekiem, nie chcemy nieproszonych gości! : )</p>
+            <img id="captcha-image" src="" alt="Obrazek CAPTCHA">
+            <input type="text" id="captcha-input" placeholder="Wpisz kod..." maxlength="5" autocomplete="off">
+            <p class="captcha-error" id="captcha-error"></p>
+            <button id="captcha-submit-btn">Zatwierdź</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="style.js"></script>
+    <script src="public/popup/popup.js"></script>
+    <script src="private/captcha.js"></script> 
+    <script src="emoji.js"></script> 
+</body>
+</html>

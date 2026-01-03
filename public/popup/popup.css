@@ -1,0 +1,80 @@
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.377);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.popup-content {
+    background-color: var(--surface-color, #1E1E1E);
+    padding: 30px 40px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.63);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    color: var(--text-primary, #EAEAEA);
+    font-family: 'Roboto', sans-serif;
+    animation: message-fade-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.popup-content p {
+    margin: 0 0 25px 0;
+    line-height: 1.6;
+    font-size: 1em;
+    text-align: justify; /* <-- DODAJ TĘ LINIĘ */
+}
+
+.popup-content p a {
+    color: #8ab4f8;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.popup-buttons button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.popup-confirm-btn {
+    background-color: var(--theme-user-message, #005C4B);
+    color: white;
+}
+
+.popup-confirm-btn:hover {
+    background-color: var(--theme-button-hover, #007a63);
+    transform: translateY(-2px);
+}
+
+.popup-decline-btn {
+    background-color: #555;
+    color: var(--text-primary, #EAEAEA);
+}
+
+.popup-decline-btn:hover {
+    background-color: #666;
+}
+
+.hidden {
+    display: none;
+}
