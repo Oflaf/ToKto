@@ -1,4 +1,4 @@
-// server.js (POPRAWIONA WERSJA)
+// server.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -13,11 +13,11 @@ const { generateBotProfile } = require('./persona-generator.js');
 const API_KEY = process.env.GOOGLE_API_KEY;
 if (!API_KEY) {
     console.error('BRAK KLUCZA GOOGLE_API_KEY W .env');
-    process.exit(1);
+    // Na Renderze nie chcemy zabijać procesu od razu, by móc zobaczyć logi
 }
 
 const app = express();
-// === FIX #1: Użyj portu z Render lub 3000 jako domyślnego ===
+// ZMIANA KRYTYCZNA: Render przypisuje port dynamicznie przez zmienną środowiskową
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -29,8 +29,9 @@ const REPORTS_TO_BAN = 5;
 
 let bannedIPs = new Map();
 let reportCounts = new Map();
-let randomQuestions = [];
+let randomQuestions = []; // Zmienna do przechowywania pytań
 
+// Funkcja do wczytywania losowych pytań z pliku
 async function loadQuestions() {
     try {
         const data = await fs.readFile(path.join(__dirname, 'los.txt'), 'utf8');
@@ -45,9 +46,6 @@ async function loadQuestions() {
     }
 }
 
-// UWAGA: System plików na Render jest efemeryczny. Oznacza to, że plik bans.json
-// zostanie usunięty przy każdym restarcie serwera (np. przy nowym wdrożeniu).
-// To rozwiązanie jest OK do testów, ale docelowo bany powinny być w bazie danych.
 async function loadBans() {
     try {
         await fs.access(BANS_FILE_PATH);
@@ -107,6 +105,7 @@ const RESTART_MESSAGES = [[], ["xd"], ["XD"], ["lol"], ["."], [], [], [], ["xddd
 const GOODBYE_MESSAGES = [["?"], ["xd"], ["XD"], ["."], ["aha"], ["wtf"], [], [], [], [], [], []];
 const conversations = new Map();
 
+// ENDPOINT DO LOSOWANIA PYTANIA
 app.get('/random-question', (req, res) => {
     if (randomQuestions.length === 0) {
         return res.status(500).json({ error: "Brak dostępnych pytań na serwerze." });
@@ -114,6 +113,7 @@ app.get('/random-question', (req, res) => {
     const question = randomQuestions[Math.floor(Math.random() * randomQuestions.length)];
     res.json({ question });
 });
+
 
 function isRepetitive(newMessage, history) {
     const normalize = (txt) => txt.toLowerCase().trim().replace(/[.,?!]/g, '');
@@ -216,15 +216,23 @@ app.post('/start-bot', (req, res) => {
     else if (genderPreference === 'man') genderPreference = 'm';
     else if (genderPreference !== 'any') genderPreference = null;
     const botProfile = generateBotProfile({ preferredGender: genderPreference });
-    const defaultGreetings = ['km', 'km?', 'k czy m?', 'hej', 'siema', 'k/m', 'hejka', 'czesc', 'siemaa', ''];
-    let firstMessage = defaultGreetings[Math.floor(Math.random() * defaultGreetings.length)];
-    if (botProfile.type === 'slang_zoomer') {
-        const greetings = ['siema', 'elo', 'hej', 'Siema', 'siemka', 'km?', 'KM?', "K czy m?", "k czy m", "km"];
-        firstMessage = greetings[Math.floor(Math.random() * greetings.length)];
+    
+    let firstMessage = '';
+    const botStartsConversation = Math.random() < 0.5;
+
+    if (botStartsConversation) {
+        const defaultGreetings = ['km', 'km?', 'k czy m?', 'hej', 'siema', 'k/m', 'hejka', 'czesc', 'siemaa', ''];
+        firstMessage = defaultGreetings[Math.floor(Math.random() * defaultGreetings.length)];
+        
+        if (botProfile.type === 'slang_zoomer') {
+            const greetings = ['siema', 'elo', 'hej', 'Siema', 'siemka', 'km?', 'KM?', "K czy m?", "k czy m", "km"];
+            firstMessage = greetings[Math.floor(Math.random() * greetings.length)];
+        } 
+        if (botProfile.type === 'lowercase_lazy') firstMessage = Math.random() > 0.5 ? "hej" : "siema";
+        if (botProfile.type === 'dry_short') firstMessage = "Hej.";
+        if (Math.random() > 0.9) firstMessage += ` ${botProfile.persona.gender === 'k' ? 'k' : 'm'}`;
     }
-    if (botProfile.type === 'lowercase_lazy') firstMessage = Math.random() > 0.5 ? "hej" : "siema";
-    if (botProfile.type === 'dry_short') firstMessage = "Hej.";
-    if (Math.random() > 0.9) firstMessage += ` ${botProfile.persona.gender === 'k' ? 'k' : 'm'}`;
+
     const sessionId = crypto.randomUUID();
     const newConversation = {
         id: sessionId,
@@ -233,11 +241,12 @@ app.post('/start-bot', (req, res) => {
         history: [{ role: "user", parts: [{ text: botProfile.instruction }] }, { role: "model", parts: [{ text: firstMessage }] }],
         isBotLocked: false, isProcessing: false, messageBuffer: [], pendingResponses: [],
         debounceTimer: null, conversationTurns: 0,
-        maxTurns: Math.floor(Math.random() * (8 - 4 + 1)) + 4,
+        maxTurns: Math.floor(Math.random() * (12 - 4 + 1)) + 4,
         lastActivity: Date.now()
     };
     conversations.set(sessionId, newConversation);
     console.log(`Nowa sesja bota utworzona: ${sessionId}. Postać: ${botProfile.persona.name} (${botProfile.persona.gender})`);
+    
     res.json({ sessionId: sessionId, initialMessage: firstMessage });
 });
 
@@ -273,12 +282,12 @@ app.post('/chat', (req, res) => {
     if (contradictionKeyword) {
         conversation.isBotLocked = true;
         res.json({ action: "contradictionDisconnect" });
-        setTimeout(() => conversations.delete(sessionId), 5000);
+        setTimeout(() => conversations.delete(sessionId), 5000); 
         return;
     }
     const foundKeyword = OFFENSIVE_KEYWORDS.find(k => message.toLowerCase().includes(k));
     if (foundKeyword) {
-        conversation.isBotLocked = true;
+        conversation.isBotLocked = true; 
         const randomReply = RESTART_MESSAGES[Math.floor(Math.random() * RESTART_MESSAGES.length)];
         res.json({ replies: randomReply, action: "disconnect" });
         setTimeout(() => conversations.delete(sessionId), 5000);
@@ -303,8 +312,10 @@ const wss = new WebSocketServer({ server });
 let waitingUsers = [];
 
 wss.on('connection', (ws, req) => {
+    // ZMIANA KRYTYCZNA: Na Renderze adres IP jest w nagłówku 'x-forwarded-for'
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     ws.ip = ip;
+    
     const banExpires = bannedIPs.get(ip);
     if (banExpires && banExpires > Date.now()) {
         console.log(`[Auth] Odrzucono połączenie od zbanowanego IP: ${ip}`);
@@ -428,7 +439,7 @@ function broadcastUserCount() {
 server.listen(PORT, async () => {
     console.log(`Serwer HTTP i WebSocket nasłuchuje na porcie ${PORT}`);
     await loadBans();
-    await loadQuestions();
+    await loadQuestions(); // Wczytaj pytania przy starcie serwera
     setInterval(cleanupExpiredBans, 60 * 1000);
     setInterval(cleanupInactiveSessions, 5 * 60 * 1000);
     setInterval(broadcastUserCount, 15000);

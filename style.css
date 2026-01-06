@@ -45,25 +45,27 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     position: relative;
     background: 
-        /* Warstwa 1: Subtelna nakładka tworząca "twardy" podział */
         linear-gradient(to bottom, 
-            rgba(255, 255, 255, 0.055) 53%,  /* Zmniejszona intensywność jaśniejszej poświaty */
-            rgba(0, 0, 0, 0.034) 47%         /* Zmniejszona intensywność ciemniejszego cienia */
+            rgba(255, 255, 255, 0.055) 53%,
+            rgba(0, 0, 0, 0.034) 47%
         ),
-        /* Warstwa 2: Oryginalny gradient motywu (widoczny pod spodem) */
         linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
-
     transition: background 0.5s ease;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    padding: 0 20px;
+}
+
+.header-right-side {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .user-count {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: static;
+    transform: none;
     color: white;
     font-size: 16px;
     font-weight: 500;
@@ -77,6 +79,35 @@ body {
     pointer-events: none;
 }
 
+.fb-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fb-link:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.fb-link img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-container {
+    position: static;
+    transform: none;
+    display: flex;
+    align-items: center;
+    height: 80%;
+    z-index: 10;
+}
+
 .textarea-wrapper {
     position: relative;
     flex-grow: 1;
@@ -87,17 +118,15 @@ body {
     display: none;
 }
 
-/* Dostosowanie textarea, aby ikona nie nachodziła na tekst */
 #user-input {
-    width: 100%; /* Upewnij się, że textarea wypełnia wrapper */
-    padding-right: 45px; /* Dodaj miejsce po prawej stronie na ikonę */
+    width: 100%;
+    padding-right: 45px;
 }
 
-/* Styl dla przycisku/ikony emoji */
 #emoji-btn {
     position: absolute;
     right: 15px;
-    bottom: 13px; /* Dopasuj w pionie do swoich preferencji */
+    bottom: 13px;
     width: 24px;
     height: 24px;
     cursor: pointer;
@@ -110,10 +139,9 @@ body {
     opacity: 1;
 }
 
-/* Główny kontener selektora emoji */
 #emoji-picker {
     position: absolute;
-    bottom: 100%; /* Pozycjonuj nad polem do wpisywania */
+    bottom: 100%;
     right: 0;
     margin-bottom: 10px;
     background-color: var(--surface-color);
@@ -122,28 +150,23 @@ body {
     padding: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
     z-index: 100;
-
     display: grid;
-    grid-template-columns: repeat(8, 1fr); /* 8 kolumn */
+    grid-template-columns: repeat(8, 1fr);
     gap: 5px;
-
-    /* Domyślnie ukryty */
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
-/* Klasa 'visible' do pokazywania selektora */
 #emoji-picker.visible {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-/* Styl dla pojedynczego emoji w selektorze */
 .emoji {
-    font-size: 1.5em; /* Zwiększ rozmiar emoji */
+    font-size: 1.5em;
     padding: 5px;
     text-align: center;
     cursor: pointer;
@@ -155,14 +178,20 @@ body {
     background-color: #3a3a3a;
 }
 
-
-
 @media (max-width: 600px) {
     .user-count {
-        right: 10px;
         font-size: 14px;
         padding: 5px 10px;
         gap: 5px;
+    }
+    .header-right-side {
+        gap: 10px;
+    }
+    .fb-link {
+        height: 32px;
+    }
+    .top-header {
+        padding: 0 10px;
     }
 }
 
@@ -175,11 +204,6 @@ body {
     max-height: 100%; 
     width: auto; 
     object-fit: contain; 
-    position: absolute; 
-    left: 20px; 
-    top: 50%; 
-    transform: translateY(-50%); 
-    z-index: 10; 
     transition: filter 0.5s ease-in-out;
 }
 
@@ -271,7 +295,6 @@ body {
 .chat-box::-webkit-scrollbar { width: 6px; }
 .chat-box::-webkit-scrollbar-track { background: transparent; }
 .chat-box::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
 
 .message {
     padding: 10px 16px;
@@ -414,50 +437,55 @@ body {
     100% { transform: translateY(0); opacity: 0.7; }
 }
 
+
 @media (max-width: 768px) {
+    .ad-space {
+        display: none; 
+    }
+
+     #emoji-btn {
+        width: 20px;   /* Zmniejszenie szerokości ikony z 24px do 20px */
+        height: 20px;  /* Zmniejszenie wysokości ikony z 24px do 20px */
+        bottom: 10px;  /* Obniżenie ikony o 3px, aby była na równi z tekstem */
+    }
+
+    .chat-container {
+        /* ZMIANA: Dodano 10px marginesu na dole przez odjęcie go od wysokości */
+        height: calc(100vh - 60px - 10px);
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        /* Dodajemy margines dolny bezpośrednio do kontenera, aby go odsunąć od krawędzi */
+        margin-bottom: 10px;
+    }
 
     #emoji-picker {
         left: 50%;
-        right: auto; /* Usuwa pozycjonowanie do prawej krawędzi */
-        max-width: 90vw; /* Ogranicza szerokość, aby nie wychodził poza ekran */
-        
-        /* Centruje element w poziomie */
-        transform: translate(-50%, 10px); 
-
-        /* Zmniejsza liczbę kolumn, aby emoji były większe */
+        right: auto;
+        max-width: 90vw;
+        transform: translate(-50%, 10px);
         grid-template-columns: repeat(7, 1fr); 
         gap: 4px;
         padding: 8px;
     }
 
     #emoji-picker.visible {
-        /* Aktualizuje transformację dla widocznego stanu, zachowując centrowanie */
         transform: translate(-50%, 0);
     }
 
     .emoji {
-        /* Lekko zmniejsza emoji, aby pasowały do nowego layoutu */
         font-size: 1.3em; 
         padding: 4px;
     }
     
-    .ad-space {
-        display: none;
-    }
-    
     .main-layout {
-        padding: 10px;
+        padding: 0;
         gap: 0;
         justify-content: flex-start;
-    }
-
-    .chat-container {
-        width: 100%;
-        max-width: 100%;
-        height: calc(100vh - 60px);
-        border-radius: 0;
-        box-shadow: none;
-        border: none;
+        /* Umożliwiamy wyrównanie do góry, aby margines na dole był widoczny */
+        align-items: flex-start;
     }
 
     .chat-header {
@@ -558,6 +586,7 @@ body {
 }
 
 
+/* Pozostała część CSS bez zmian... */
 /* ================================================= */
 /* ===== STYLE DLA WYSZUKIWANIA I MOTYWÓW ====== */
 /* ================================================= */
@@ -591,38 +620,21 @@ body {
     transform: scale(1.1);
 }
 
-.logo-container {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    height: 80%; /* Wysokość całego kontenera, podobna do starego logo */
-    z-index: 10;
-}
-
-/* Styl dla nowej ikony po lewej stronie */
 .header-logo-icon {
-    height: 100%; /* Ikona wypełnia wysokość kontenera */
+    height: 100%;
     width: auto;
     object-fit: contain;
-
 }
 
-/* Zmodyfikowany styl dla głównego logo (tego po prawej) */
 .header-logo {
-    height: 75%; /* Pomniejszone logo (85% wysokości kontenera) */
+    height: 75%;
     width: auto;
     object-fit: contain;
     transition: filter 0.5s ease-in-out;
-    
     margin-left: -5px;
-    position: static; /* Upewniamy się, że nie ma starego pozycjonowania */
-    transform: none;  /* Resetujemy transformację */
+    position: static;
+    transform: none;
 }
-
-
 
 .report-icon:hover:not(.disabled) {
     color: var(--danger-color);
@@ -636,12 +648,11 @@ body {
     transform: none;
 }
 
-/* Styl dla ikonki wewnątrz wiadomości */
 .message-content img.dice-prefix {
     width: 20px;
     height: 20px;
     margin-right: 8px;
-    vertical-align: middle; /* Wyrównuje ikonkę z tekstem */
+    vertical-align: middle;
 }
 
 .theme-palette-container {
@@ -683,7 +694,6 @@ body {
     transform: scale(1.1);
     border-color: var(--text-primary);
 }
-
 
 .search-modal-overlay {
     position: fixed;

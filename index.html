@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Czat Anonimowy</title>
+    <title>ToKto.pl</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="public/popup/popup.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link id="favicon" rel="icon" type="image/png" href="public/img/fav.png">
 </head>
 <body>
+    <!-- USUNIĘTO REKLAMĘ MOBILNĄ (GÓRA) -->
+
     <div id="popup1" class="popup-overlay hidden">
         <div class="popup-content">
             <p>
@@ -40,9 +42,15 @@
             <img src="public/img/logo.png" alt="Logo Czat Anonimowy" class="header-logo">
         </div>
         
-        <div class="user-count" title="Użytkownicy online">
-            <i class="fas fa-users"></i>
-            <span id="user-count-number">...</span>
+        <div class="header-right-side">
+            <a href="https://www.facebook.com/profile.php?id=61586313201204" class="fb-link" target="_blank" rel="noopener noreferrer" title="Odwiedź nas na Facebooku">
+                <img src="public/img/fb_link.png" alt="Nasz Facebook">
+            </a>
+            <div class="user-count" title="Użytkownicy online">
+                <i class="fas fa-users"></i>
+                <span id="user-count-number">...</span>
+            </div>
+
         </div>
     </div>
 
@@ -58,7 +66,6 @@
                     <div class="dice-icon" id="random-question-btn" title="Zadaj losowe pytanie">
                         <img src="public/img/dice.png" alt="Losowe pytanie">
                     </div>
-                    <!-- NOWA IKONA DŹWIĘKU -->
                     <div class="sound-icon" id="toggle-sound-btn" title="Wycisz powiadomienia">
                         <i class="fas fa-volume-up"></i>
                     </div>
@@ -86,6 +93,8 @@
         </div>
         <div class="ad-space right-ad"></div>
     </div>
+
+    <!-- USUNIĘTO REKLAMĘ MOBILNĄ (DÓŁ) -->
 
     <div class="search-modal-overlay" id="search-modal">
         <div class="search-modal-content">
@@ -132,7 +141,7 @@
     <div class="captcha-overlay" id="captcha-overlay">
         <div class="captcha-content">
             <h3>Weryfikacja CAPTCHA</h3>
-            <p>Pokaż, że nie jesteś człowiekiem, nie chcemy nieproszonych gości! : )</p>
+            <p>Udowodnij, że jesteś człowiekiem, nie chcemy nieproszonych gości! : )</p>
             <img id="captcha-image" src="" alt="Obrazek CAPTCHA">
             <input type="text" id="captcha-input" placeholder="Wpisz kod..." maxlength="5" autocomplete="off">
             <p class="captcha-error" id="captcha-error"></p>
