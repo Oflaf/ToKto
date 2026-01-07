@@ -8,16 +8,17 @@ const { WebSocketServer } = require('ws');
 const crypto = require('crypto');
 const fs = require('fs').promises;
 
+// NOWA ZMIANA: Import biblioteki Twilio
+const twilio = require('twilio');
+
 const { generateBotProfile } = require('./persona-generator.js');
 
 const API_KEY = process.env.GOOGLE_API_KEY;
 if (!API_KEY) {
     console.error('BRAK KLUCZA GOOGLE_API_KEY W .env');
-    // Na Renderze nie chcemy zabijać procesu od razu, by móc zobaczyć logi
 }
 
 const app = express();
-// ZMIANA KRYTYCZNA: Render przypisuje port dynamicznie przez zmienną środowiskową
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -29,9 +30,8 @@ const REPORTS_TO_BAN = 5;
 
 let bannedIPs = new Map();
 let reportCounts = new Map();
-let randomQuestions = []; // Zmienna do przechowywania pytań
+let randomQuestions = [];
 
-// Funkcja do wczytywania losowych pytań z pliku
 async function loadQuestions() {
     try {
         const data = await fs.readFile(path.join(__dirname, 'los.txt'), 'utf8');
@@ -105,7 +105,35 @@ const RESTART_MESSAGES = [[], ["xd"], ["XD"], ["lol"], ["."], [], [], [], ["xddd
 const GOODBYE_MESSAGES = [["?"], ["xd"], ["XD"], ["."], ["aha"], ["wtf"], [], [], [], [], [], []];
 const conversations = new Map();
 
-// ENDPOINT DO LOSOWANIA PYTANIA
+
+// NOWA ZMIANA: Dodajemy bezpieczny endpoint do pobierania serwerów ICE
+app.get('/get-ice-servers', async (req, res) => {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+        console.warn('[ICE] Brak kluczy Twilio w .env. Zwracam tylko publiczne serwery STUN.');
+        return res.json({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+        });
+    }
+
+    try {
+        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        const token = await client.tokens.create();
+        res.json({ iceServers: token.iceServers });
+    } catch (error) {
+        console.error('[ICE] Błąd podczas pobierania tokenu od Twilio:', error);
+        res.status(500).json({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+        });
+    }
+});
+
+
 app.get('/random-question', (req, res) => {
     if (randomQuestions.length === 0) {
         return res.status(500).json({ error: "Brak dostępnych pytań na serwerze." });
@@ -312,7 +340,6 @@ const wss = new WebSocketServer({ server });
 let waitingUsers = [];
 
 wss.on('connection', (ws, req) => {
-    // ZMIANA KRYTYCZNA: Na Renderze adres IP jest w nagłówku 'x-forwarded-for'
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     ws.ip = ip;
     
@@ -439,7 +466,7 @@ function broadcastUserCount() {
 server.listen(PORT, async () => {
     console.log(`Serwer HTTP i WebSocket nasłuchuje na porcie ${PORT}`);
     await loadBans();
-    await loadQuestions(); // Wczytaj pytania przy starcie serwera
+    await loadQuestions();
     setInterval(cleanupExpiredBans, 60 * 1000);
     setInterval(cleanupInactiveSessions, 5 * 60 * 1000);
     setInterval(broadcastUserCount, 15000);

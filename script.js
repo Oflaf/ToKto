@@ -1,5 +1,5 @@
 // script.js
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const openModalBtn = document.getElementById('open-search-modal');
     const searchModal = document.getElementById('search-modal');
     const closeModalBtn = document.getElementById('close-search-modal');
@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const banNotification = document.getElementById('ban-notification');
     const reportConfirmationPopup = document.getElementById('report-confirmation-popup');
     
-    // === ZMIENNE DLA POWIADOMIEŃ ===
     const favicon = document.getElementById('favicon');
     const originalTitle = document.title;
     const defaultFavicon = 'public/img/fav.png';
@@ -65,7 +64,34 @@ document.addEventListener('DOMContentLoaded', () => {
         { time: 1440, users: 727 }
     ];
 
-    // === FUNKCJA DO OBSŁUGI POWIADOMIEŃ ===
+    // NOWA ZMIANA: Zmienna do przechowywania konfiguracji ICE
+    let iceServersConfig = null;
+
+    // NOWA ZMIANA: Funkcja do pobierania konfiguracji serwerów ICE z naszego backendu
+    async function fetchIceServers() {
+        try {
+            const response = await fetch('/get-ice-servers');
+            if (!response.ok) {
+                throw new Error('Server response was not ok.');
+            }
+            const config = await response.json();
+            iceServersConfig = config;
+            console.log("Pomyślnie pobrano konfigurację serwerów.");
+        } catch (error) {
+            console.error("Nie udało się pobrać konfiguracji ICE. Używam publicznych STUN.", error);
+            // Fallback na wypadek błędu serwera - używamy tylko darmowych serwerów STUN
+            iceServersConfig = { 
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ] 
+            };
+        }
+    }
+
+    // NOWA ZMIANA: Wywołujemy funkcję pobierającą konfigurację zaraz po załadowaniu strony
+    await fetchIceServers();
+    
     const handleNewMessageNotification = () => {
         if (document.hidden) {
             favicon.href = notificationFavicon;
@@ -76,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // === EVENT LISTENER DO RESETOWANIA FAVICONY I TYTUŁU ===
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
             favicon.href = defaultFavicon;
@@ -84,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // === OBSŁUGA PRZYCISKU WYCISZANIA ===
     const updateSoundIcon = () => {
         if (isMuted) {
             soundIcon.className = 'fas fa-volume-mute';
@@ -101,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSoundIcon();
     });
 
-    updateSoundIcon(); // Ustawienie początkowej ikony przy załadowaniu strony
+    updateSoundIcon();
 
     function getFakeUserCount() {
         const now = new Date();
@@ -132,8 +156,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalCount = totalUsers + fluctuation;
         userCountElement.textContent = finalCount > 0 ? finalCount : 0;
     }
-
-    const ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:stun2.l.google.com:19302' }, { urls: 'stun:stun3.l.google.com:19302' }, { urls: 'stun:stun4.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }, { urls: "turn:numb.viagenie.ca", username: "webrtc@live.com", credential: "muazkh" }] };
+    
+    // NOWA ZMIANA: Usuwamy starą, stałą definicję ICE_SERVERS
+    // const ICE_SERVERS = { ... };
+    
     const openModal = () => searchModal.classList.add('visible');
     const closeModal = () => searchModal.classList.remove('visible');
     openModalBtn.addEventListener('click', openModal);
@@ -246,7 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const startP2PConnection = (isInitiator) => {
         if (peerConnection) return;
-        peerConnection = new RTCPeerConnection(ICE_SERVERS);
+        // NOWA ZMIANA: Tworzymy połączenie używając pobranej z serwera konfiguracji
+        peerConnection = new RTCPeerConnection(iceServersConfig);
+
         clearTimeout(p2pConnectionTimeout);
         p2pConnectionTimeout = setTimeout(() => { if (isConnecting && peerConnection) { addMessage('Nawiązywanie połączenia z rozmówcą trwa zbyt długo. Ponawiam...', 'system-message'); peerConnection.close(); peerConnection = null; dataChannel = null; connectToBot(searchPreferences); } }, 3000);
         peerConnection.onicecandidate = (e) => { if (e.candidate && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'signal', data: { candidate: e.candidate } })); };
@@ -380,9 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     function initializeWebSocket() {
-        // ZMIANA KRYTYCZNA: Automatyczne wykrywanie protokołu (ws dla http, wss dla https)
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // ZMIANA KRYTYCZNA: Na Renderze nie podajemy portu, host zawiera wszystko co trzeba
         const WSS_URL = `${protocol}//${window.location.host}`;
 
         socket = new WebSocket(WSS_URL);
