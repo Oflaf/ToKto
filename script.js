@@ -309,10 +309,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const calculateTypingTime = (text) => { let time = text.length * 100 + Math.random() * 4500 + 4000; return Math.min(Math.max(time, 5000), 8000); };
-    const displayBotMessageWithDelay = async (msg, isFirstInSeries) => { if (!isBotMode) return; showTypingIndicator(); const initialDelay = isFirstInSeries ? (Math.random() * 1000 + 1000) : (Math.random() * 400 + 200); await wait(initialDelay); const typingTime = calculateTypingTime(msg); await wait(typingTime); hideTypingIndicator(); await wait(100); if (isBotMode) addMessage(msg, 'stranger-message'); };
-    const displayBotMessages = async (messages) => { if (isBotMode) startInactivityTimer(); for (let i = 0; i < messages.length; i++) { if (!isBotMode) return; const msg = messages[i]; await displayBotMessageWithDelay(msg, i === 0); if (i < messages.length - 1) await wait(Math.random() * 1000 + 500); } };
-    
+
+// ZASTĄP obecną funkcję displayBotMessages poniższą, ulepszoną wersją.
+const displayBotMessages = async (messages) => {
+    if (isBotMode) startInactivityTimer();
+
+    // Pętla iterująca po każdej wiadomości otrzymanej od bota
+    for (let i = 0; i < messages.length; i++) {
+        if (!isBotMode) return; // Przerwij, jeśli połączenie zostało w międzyczasie zakończone
+        const msg = messages[i];
+
+        // 1. Oblicz realistyczny czas pisania na podstawie długości wiadomości
+        // (np. 60ms na znak + losowy element dla naturalności)
+        const typingTime = msg.length * 60 + (Math.random() * 1700 + 400);
+
+        // 2. Pokaż animację pisania na czas "pisania" tej konkretnej wiadomości
+        showTypingIndicator();
+        await wait(typingTime);
+        hideTypingIndicator();
+
+        // 3. Krótka pauza po pisaniu, a przed wyświetleniem wiadomości
+        await wait(250);
+
+        // 4. Wyświetl wiadomość (ponownie sprawdź, czy nadal jesteśmy w trybie bota)
+        if (isBotMode) {
+            addMessage(msg, 'stranger-message');
+        }
+
+
+        if (i < messages.length - 1) {
+            await wait(Math.random() * 1400 + 500);
+        }
+    }
+};
     const sendMessage = async (messagePayload = null) => {
         if (!canSendMessage && !messagePayload) return;
         clearTimeout(inactivityTimeout);
