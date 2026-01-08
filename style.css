@@ -38,6 +38,7 @@ body {
     overflow: hidden;
 }
 
+/* === ZMIANA 1: Zaktualizowano .top-header === */
 .top-header {
     width: 100%;
     height: 8%;
@@ -50,22 +51,34 @@ body {
             rgba(0, 0, 0, 0.034) 47%
         ),
         linear-gradient(to bottom, var(--theme-gradient-start), var(--theme-gradient-end));
+
     transition: background 0.5s ease;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Zapewnia rozmieszczenie elementów na krawędziach */
     align-items: center;
-    padding: 0 20px;
+    padding: 0 20px; /* Dodaje odstęp od krawędzi ekranu */
 }
 
+/* === ZMIANA 2: Usunięto pozycjonowanie absolutne z .logo-container === */
+.logo-container {
+    /* Usunięto 'position: absolute' i powiązane właściwości */
+    display: flex;
+    align-items: center;
+    height: 80%; 
+    z-index: 10;
+}
+
+/* === NOWA KLASA: Style dla kontenera po prawej stronie nagłówka === */
 .header-right-side {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 15px; /* Odstęp między linkiem FB a licznikiem */
 }
 
+
+/* === ZMIANA 3: Usunięto pozycjonowanie absolutne z .user-count === */
 .user-count {
-    position: static;
-    transform: none;
+    /* Usunięto 'position: absolute', 'right', 'top', 'transform' */
     color: white;
     font-size: 16px;
     font-weight: 500;
@@ -77,35 +90,6 @@ body {
     border-radius: 20px;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     pointer-events: none;
-}
-
-.fb-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    opacity: 0.8;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.fb-link:hover {
-    opacity: 1;
-    transform: scale(1.05);
-}
-
-.fb-link img {
-    height: 100%;
-    width: auto;
-    object-fit: contain;
-}
-
-.logo-container {
-    position: static;
-    transform: none;
-    display: flex;
-    align-items: center;
-    height: 80%;
-    z-index: 10;
 }
 
 .textarea-wrapper {
@@ -141,7 +125,7 @@ body {
 
 #emoji-picker {
     position: absolute;
-    bottom: 100%;
+    bottom: 100%; 
     right: 0;
     margin-bottom: 10px;
     background-color: var(--surface-color);
@@ -178,33 +162,25 @@ body {
     background-color: #3a3a3a;
 }
 
-@media (max-width: 600px) {
-    .user-count {
-        font-size: 14px;
-        padding: 5px 10px;
-        gap: 5px;
-    }
-    .header-right-side {
-        gap: 10px;
-    }
-    .fb-link {
-        height: 32px;
-    }
-    .top-header {
-        padding: 0 10px;
-    }
-}
-
 .header-logo.invert-logo {
     filter: invert(100%) hue-rotate(180deg);
 }
 
+/* Styl dla nowej ikony po lewej stronie */
+.header-logo-icon {
+    height: 100%; 
+    width: auto;
+    object-fit: contain;
+}
+
+/* Zmodyfikowany styl dla głównego logo (tego po prawej) */
 .header-logo {
-    height: 70%; 
-    max-height: 100%; 
-    width: auto; 
-    object-fit: contain; 
+    height: 75%; 
+    width: auto;
+    object-fit: contain;
     transition: filter 0.5s ease-in-out;
+    margin-left: -5px;
+    /* Usunięto 'position: static' i 'transform: none', bo nie są już potrzebne */
 }
 
 .top-header::before {
@@ -295,6 +271,7 @@ body {
 .chat-box::-webkit-scrollbar { width: 6px; }
 .chat-box::-webkit-scrollbar-track { background: transparent; }
 .chat-box::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
 
 .message {
     padding: 10px 16px;
@@ -437,35 +414,37 @@ body {
     100% { transform: translateY(0); opacity: 0.7; }
 }
 
-
+/* === ZMIANA 4: Uproszczono media query dla urządzeń mobilnych === */
 @media (max-width: 768px) {
-    .ad-space {
-        display: none; 
+
+    .top-header {
+        height: 60px;
+        padding: 0 10px; /* Mniejszy odstęp na krawędziach */
     }
 
-     #emoji-btn {
-        width: 20px;   /* Zmniejszenie szerokości ikony z 24px do 20px */
-        height: 20px;  /* Zmniejszenie wysokości ikony z 24px do 20px */
-        bottom: 10px;  /* Obniżenie ikony o 3px, aby była na równi z tekstem */
+    .header-right-side {
+        gap: 8px; /* Zmniejszony odstęp między ikonami po prawej */
     }
 
-    .chat-container {
-        /* ZMIANA: Dodano 10px marginesu na dole przez odjęcie go od wysokości */
-        height: calc(100vh - 60px - 10px);
-        width: 100%;
-        max-width: 100%;
-        border-radius: 0;
-        box-shadow: none;
-        border: none;
-        /* Dodajemy margines dolny bezpośrednio do kontenera, aby go odsunąć od krawędzi */
-        margin-bottom: 10px;
+    .fb-link {
+        height: 35px; /* Lekko zmniejszona ikona FB */
+    }
+
+    .user-count {
+        font-size: 14px;
+        padding: 5px 10px;
+        gap: 5px;
+    }
+
+    .logo-container {
+        height: 70%;
     }
 
     #emoji-picker {
         left: 50%;
         right: auto;
         max-width: 90vw;
-        transform: translate(-50%, 10px);
+        transform: translate(-50%, 10px); 
         grid-template-columns: repeat(7, 1fr); 
         gap: 4px;
         padding: 8px;
@@ -480,12 +459,23 @@ body {
         padding: 4px;
     }
     
+    .ad-space {
+        display: none;
+    }
+    
     .main-layout {
-        padding: 0;
+        padding: 10px;
         gap: 0;
         justify-content: flex-start;
-        /* Umożliwiamy wyrównanie do góry, aby margines na dole był widoczny */
-        align-items: flex-start;
+    }
+
+    .chat-container {
+        width: 100%;
+        max-width: 100%;
+        height: calc(100vh - 60px);
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
     }
 
     .chat-header {
@@ -494,10 +484,6 @@ body {
 
     .chat-header h2 {
         font-size: 1em;
-    }
-
-    .top-header {
-        height: 60px;
     }
 
     .chat-input {
@@ -522,11 +508,6 @@ body {
     #user-input {
         padding: 10px 15px;
         min-height: 40px;
-    }
-
-    .header-logo {
-        height: 60%;
-        left: 15px;
     }
     
     .theme-palette-container {
@@ -586,9 +567,8 @@ body {
 }
 
 
-/* Pozostała część CSS bez zmian... */
 /* ================================================= */
-/* ===== STYLE DLA WYSZUKIWANIA I MOTYWÓW ====== */
+/* ===== POZOSTAŁE STYLE (BEZ ZMIAN) ====== */
 /* ================================================= */
 
 .header-icons {
@@ -620,20 +600,24 @@ body {
     transform: scale(1.1);
 }
 
-.header-logo-icon {
+.fb-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fb-link:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.fb-link img {
     height: 100%;
     width: auto;
     object-fit: contain;
-}
-
-.header-logo {
-    height: 75%;
-    width: auto;
-    object-fit: contain;
-    transition: filter 0.5s ease-in-out;
-    margin-left: -5px;
-    position: static;
-    transform: none;
 }
 
 .report-icon:hover:not(.disabled) {
@@ -694,6 +678,7 @@ body {
     transform: scale(1.1);
     border-color: var(--text-primary);
 }
+
 
 .search-modal-overlay {
     position: fixed;
