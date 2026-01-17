@@ -101,8 +101,8 @@ const MODEL_NAME = 'gemma-3n-e4b-it';
 const CONTRADICTION_KEYWORDS = ['zaprzeczasz', 'sprzeczne', 'pisałeś inaczej', 'bez sensu', 'gubisz się'];
 const OFFENSIVE_KEYWORDS = ['spierdalaj', 'kurwo', 'wtf', 'o co ci chodzi', 'co?', 'botem', 'jestes ai', 'wypierdalaj', 'pierdol', 'jeb', ];
 const SAFE_FALLBACKS = ["eee", "ta", "aha", "yhm", "no", "mhm", "huh", "Huh", "AHa", "Aha", "No", "Yyy", "XD", "Hm"];
-const RESTART_MESSAGES = [[], ["xd"], ["XD"], ["lol"], ["."], [], [], [], ["xddd"]];
-const GOODBYE_MESSAGES = [["?"], ["xd"], ["XD"], ["."], ["aha"], ["wtf"], [], [], [], [], [], []];
+const RESTART_MESSAGES = [[], ["xd"], ["XD"], ["lol"], ["ee"], [], [], [], ["xddd"]];
+const GOODBYE_MESSAGES = [["?"], ["xd"], ["XD"], ["ugh"], ["aha"], ["wtf"], [], [], [], [], [], []];
 const conversations = new Map();
 
 
@@ -246,7 +246,7 @@ app.post('/start-bot', (req, res) => {
     const botProfile = generateBotProfile({ preferredGender: genderPreference });
     
     let firstMessage = '';
-    const botStartsConversation = Math.random() < 0.5;
+    const botStartsConversation = Math.random() < 0.8;
 
     if (botStartsConversation) {
         const defaultGreetings = ['km', 'km?', 'k czy m?', 'hej', 'siema', 'k/m', 'hejka', 'czesc', 'siemaa', ''];

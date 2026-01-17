@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isBotMode = false, isTyping = false, isConnecting = false, isBotTypingAnimationActive = false, isConnectionEnding = false;
     let canSendMessage = true;
     const MESSAGE_COOLDOWN = 1500;
-    let inactivityTimeout = null;
+    let inactivityTimeout = null, inactivityProbeTimer = null;
     const TYPING_TIMER_LENGTH = 1500;
     
     let isBanned = false;
@@ -64,10 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { time: 1440, users: 727 }
     ];
 
-    // NOWA ZMIANA: Zmienna do przechowywania konfiguracji ICE
     let iceServersConfig = null;
 
-    // NOWA ZMIANA: Funkcja do pobierania konfiguracji serwerów ICE z naszego backendu
     async function fetchIceServers() {
         try {
             const response = await fetch('/get-ice-servers');
@@ -79,7 +77,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log("Pomyślnie pobrano konfigurację serwerów.");
         } catch (error) {
             console.error("Nie udało się pobrać konfiguracji ICE. Używam publicznych STUN.", error);
-            // Fallback na wypadek błędu serwera - używamy tylko darmowych serwerów STUN
             iceServersConfig = { 
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -89,7 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // NOWA ZMIANA: Wywołujemy funkcję pobierającą konfigurację zaraz po załadowaniu strony
     await fetchIceServers();
     
     const handleNewMessageNotification = () => {
@@ -157,9 +153,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         userCountElement.textContent = finalCount > 0 ? finalCount : 0;
     }
     
-    // NOWA ZMIANA: Usuwamy starą, stałą definicję ICE_SERVERS
-    // const ICE_SERVERS = { ... };
-    
     const openModal = () => searchModal.classList.add('visible');
     const closeModal = () => searchModal.classList.remove('visible');
     openModalBtn.addEventListener('click', openModal);
@@ -211,16 +204,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     const autoGrowTextarea = () => { userInput.style.height = 'auto'; userInput.style.height = userInput.scrollHeight + 'px'; };
     const setButtonToConnectMode = () => { controlBtn.classList.remove('disconnect-mode'); controlBtn.classList.add('connect-mode'); controlBtn.title = 'Połącz'; controlBtn.innerHTML = '<i class="fas fa-play"></i>'; };
     const setButtonToDisconnectMode = () => { controlBtn.classList.remove('connect-mode'); controlBtn.classList.add('disconnect-mode'); controlBtn.title = 'Rozłącz'; controlBtn.innerHTML = '<i class="fas fa-stop"></i>'; };
-    const startInactivityTimer = () => { clearTimeout(inactivityTimeout); inactivityTimeout = setTimeout(() => { if (isBotMode) { addMessage('Rozmowa zakończona.', 'system-message'); endConnection(); } }, 60000); };
+    
+    const startInactivityTimer = () => {
+        clearTimeout(inactivityTimeout);
+        clearTimeout(inactivityProbeTimer);
+    
+        const probingMessages = [
+            [], ["halo"], [], ["halo?"], ["jesteś?"], , [], ["jestes??"], [], ["halooo?"], [], [":)"], ["jestes tam?"], [], ["Jestes??"], [": )"], [], ["😅"] ["?"],["?"], ["ej?"], ["hmm"], ["halo ?"], [], ["🙃"], [], ["😉"], [], ["🤨"], ["😏"], [], ["☺️"]
+        ];
+    
+        inactivityProbeTimer = setTimeout(() => {
+            if (isBotMode) {
+                const selectedMessage = probingMessages[Math.floor(Math.random() * probingMessages.length)];
+                if (selectedMessage.length > 0) {
+                    displayBotMessages(selectedMessage, { resetInactivityTimer: false });
+                }
+            }
+        }, 20000);
+    
+        inactivityTimeout = setTimeout(() => {
+            if (isBotMode) {
+                addMessage('<strong>Rozmówca się rozłączył.</strong>', 'system-message');
+                endConnection();
+            }
+        }, 30000);
+    };
     
     const finalizeConnection = () => {
         clearTimeout(connectionTimer); clearTimeout(p2pConnectionTimeout); isConnecting = false; clearChat(); setStatus('Połączono', 'connected'); addMessage('Połączono! Możesz zacząć rozmowę.', 'system-message'); enableChat();
         hasReportedCurrentPartner = false; reportBtn.style.display = 'block'; reportBtn.classList.add('disabled'); reportBtn.title = 'Musisz odczekać 10 sekund';
         clearTimeout(reportButtonTimer);
         reportButtonTimer = setTimeout(() => { reportBtn.classList.remove('disabled'); reportBtn.title = 'Zgłoś użytkownika'; }, 10000);
-        controlBtn.disabled = true; controlBtn.classList.add('cooldown', 'recharging');
+        
+        // ZABLOKUJ OBA PRZYCISKI
+        controlBtn.disabled = true;
+        controlBtn.classList.add('cooldown', 'recharging');
+        openModalBtn.style.pointerEvents = 'none'; // Blokuje kliknięcie
+        openModalBtn.style.opacity = '0.5'; // Wygasza ikonę
+    
         setTimeout(() => controlBtn.classList.remove('cooldown'), 50);
-        disconnectCooldownTimer = setTimeout(() => { controlBtn.disabled = false; controlBtn.classList.remove('recharging'); }, 10000);
+        
+        disconnectCooldownTimer = setTimeout(() => {
+            // ODBLOKUJ OBA PRZYCISKI
+            controlBtn.disabled = false;
+            controlBtn.classList.remove('recharging');
+            openModalBtn.style.pointerEvents = 'auto'; // Przywraca klikalność
+            openModalBtn.style.opacity = '1'; // Przywraca normalny wygląd
+        }, 10000);
     };
 
     window.addEventListener('offline', () => { if (controlBtn.classList.contains('disconnect-mode')) { endConnection(); addMessage('Rozmowa zakończona. Sprawdź połączenie z internetem.', 'system-message'); } });
@@ -252,9 +282,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const endConnection = () => {
         isConnectionEnding = false; isConnecting = false; stopBotTypingAnimation();
-        clearTimeout(connectionTimer); clearTimeout(p2pConnectionTimeout); clearTimeout(disconnectCooldownTimer); clearTimeout(inactivityTimeout); clearTimeout(reportButtonTimer);
-        currentSessionId = null; controlBtn.classList.remove('cooldown', 'recharging');
+        clearTimeout(connectionTimer); clearTimeout(p2pConnectionTimeout); clearTimeout(disconnectCooldownTimer); clearTimeout(inactivityTimeout); clearTimeout(inactivityProbeTimer); clearTimeout(reportButtonTimer);
+        currentSessionId = null; 
+        
+        // Zapewnij, że przyciski są odblokowane po zakończeniu
+        controlBtn.classList.remove('cooldown', 'recharging');
         if (!isBanned) controlBtn.disabled = false;
+        openModalBtn.style.pointerEvents = 'auto';
+        openModalBtn.style.opacity = '1';
+
         if (peerConnection) { peerConnection.close(); peerConnection = null; }
         if (dataChannel) dataChannel = null;
         if (socket) {
@@ -272,7 +308,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     const startP2PConnection = (isInitiator) => {
         if (peerConnection) return;
-        // NOWA ZMIANA: Tworzymy połączenie używając pobranej z serwera konfiguracji
         peerConnection = new RTCPeerConnection(iceServersConfig);
 
         clearTimeout(p2pConnectionTimeout);
@@ -305,46 +340,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                 addMessage(event.data, 'stranger-message');
             }
         };
-        dataChannel.onclose = () => handleDisconnection('Rozmówca się rozłączył.');
+        dataChannel.onclose = () => handleDisconnection('<strong>Rozmówca się rozłączył.</strong>');
     };
 
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ZASTĄP obecną funkcję displayBotMessages poniższą, ulepszoną wersją.
-const displayBotMessages = async (messages) => {
-    if (isBotMode) startInactivityTimer();
-
-    // Pętla iterująca po każdej wiadomości otrzymanej od bota
-    for (let i = 0; i < messages.length; i++) {
-        if (!isBotMode) return; // Przerwij, jeśli połączenie zostało w międzyczasie zakończone
-        const msg = messages[i];
-
-        // 1. Oblicz realistyczny czas pisania na podstawie długości wiadomości
-        // (np. 60ms na znak + losowy element dla naturalności)
-        const typingTime = msg.length * 60 + (Math.random() * 1700 + 400);
-
-        // 2. Pokaż animację pisania na czas "pisania" tej konkretnej wiadomości
-        showTypingIndicator();
-        await wait(typingTime);
-        hideTypingIndicator();
-
-        // 3. Krótka pauza po pisaniu, a przed wyświetleniem wiadomości
-        await wait(250);
-
-        // 4. Wyświetl wiadomość (ponownie sprawdź, czy nadal jesteśmy w trybie bota)
-        if (isBotMode) {
-            addMessage(msg, 'stranger-message');
+    
+    const displayBotMessages = async (messages, options = { resetInactivityTimer: true }) => {
+        if (isBotMode && options.resetInactivityTimer) {
+            startInactivityTimer();
         }
 
+        for (let i = 0; i < messages.length; i++) {
+            if (!isBotMode) return;
+            const msg = messages[i];
+            const typingTime = msg.length * 60 + (Math.random() * 1700 + 400);
 
-        if (i < messages.length - 1) {
-            await wait(Math.random() * 1400 + 500);
+            showTypingIndicator();
+            await wait(typingTime);
+            hideTypingIndicator();
+
+            await wait(250);
+
+            if (isBotMode) {
+                addMessage(msg, 'stranger-message');
+            }
+
+            if (i < messages.length - 1) {
+                await wait(Math.random() * 1400 + 500);
+            }
         }
-    }
-};
+    };
+
     const sendMessage = async (messagePayload = null) => {
         if (!canSendMessage && !messagePayload) return;
-        clearTimeout(inactivityTimeout);
+        clearTimeout(inactivityTimeout); clearTimeout(inactivityProbeTimer);
         const isCustomMessage = messagePayload !== null;
         const backendMessage = isCustomMessage ? messagePayload.backendText : userInput.value.trim();
         const displayMessage = isCustomMessage ? messagePayload.displayText : backendMessage;
@@ -364,8 +393,8 @@ const displayBotMessages = async (messages) => {
                 stopBotTypingAnimation();
                 if (!response.ok || response.status === 204) return; const data = await response.json(); if (!isBotMode) return;
                 if (data.action === "contradictionDisconnect") { addMessage("Bot wykrył sprzeczność w rozmowie. Koniec.", "system-message"); setTimeout(() => endConnection(), 4000); return; }
-                if (data.action === "disconnect") { if (data.replies?.length > 0) await displayBotMessages(data.replies); setTimeout(() => { addMessage('Rozmowa zakończona.', 'system-message'); endConnection(); }, 4000); return; }
-                if (data.action === "silentDisconnect") { if (data.replies?.length > 0) await displayBotMessages(data.replies); isConnectionEnding = true; setTimeout(() => { if (isBotMode) { addMessage('Rozmówca się rozłączył.', 'system-message'); endConnection(); } }, 10000); return; }
+                if (data.action === "disconnect") { if (data.replies?.length > 0) await displayBotMessages(data.replies); setTimeout(() => { addMessage('<strong>Rozmówca się rozłączył.</strong>', 'system-message'); endConnection(); }, 4000); return; }
+                if (data.action === "silentDisconnect") { if (data.replies?.length > 0) await displayBotMessages(data.replies); isConnectionEnding = true; setTimeout(() => { if (isBotMode) { addMessage('<strong>Rozmówca się rozłączył.</strong>', 'system-message'); endConnection(); } }, 10000); return; }
                 if (data.replies?.length > 0) await displayBotMessages(data.replies);
             } catch (error) { stopBotTypingAnimation(); console.error(error); if (isBotMode) { addMessage('pa', 'stranger-message'); isConnectionEnding = true; setTimeout(() => { if (isBotMode) { addMessage('Rozmowa zakończona z powodu błędu.', 'system-message'); endConnection(); } }, 10000); } }
         } 
@@ -389,7 +418,10 @@ const displayBotMessages = async (messages) => {
         if (controlBtn.classList.contains('connect-mode')) {
             if (searchPreferences === null) openModal(); 
             else startSearch(searchPreferences);
-        } else { addMessage('Rozmowa zakończona.', 'system-message'); endConnection(); }
+        } else { 
+            addMessage('<strong>Rozłączyłeś się</strong>', 'system-message'); 
+            endConnection(); 
+        }
     });
 
     startSearchFromModalBtn.addEventListener('click', () => {
@@ -465,7 +497,7 @@ const displayBotMessages = async (messages) => {
             } else if (data.type === 'signal') {
                 if (peerConnection) handleSignalingData(data.data);
             } else if (data.type === 'partnerDisconnected') {
-                handleDisconnection('Rozmówca się rozłączył.');
+                handleDisconnection('<strong>Rozmówca się rozłączył.</strong>');
             }
         };
         
